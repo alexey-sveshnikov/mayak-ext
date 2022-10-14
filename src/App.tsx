@@ -25,10 +25,16 @@ function getItems(ref: RefObject<HTMLDivElement>): CartItem[] {
 
   const text = links.join("\n") + ref.current.textContent
 
-  const items: CartItem[] = []
+  const items: CartItem[] = [];
+  const seenItems = new Set<string>()
 
   for (const m of text.matchAll(/https:\/\/www\.utkonos\.ru\/item\/(\d+)/g)) {
     const id = m[1]
+    if (seenItems.has(id)) {
+      continue
+    }
+    seenItems.add(id)
+
     items.push({
       id: parseInt(id),
       quantity: 1,
