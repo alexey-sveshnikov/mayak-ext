@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Плагин для заполнения корзины в Утконосе",
+  "description": "",
+  "version": "1.0",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://utkonos.ru/*",
+        "https://www.utkonos.ru/*"
+      ],
+      "js": [
+        "js/vendor.js",
+        "js/content_script.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://utkonos.ru/*",
+    "https://wwww.utkonos.ru/*"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "js/injected_script.js",
+        "js/vendor.js"
+      ],
+      "matches": [
+        "*://*/*"
+      ]
+    }
+  ]
+}
