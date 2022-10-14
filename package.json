@@ -1,0 +1,39 @@
+{
+  "name": "utkonos-ext",
+  "version": "1.0.0",
+  "description": "Utkonos cart helper extension",
+  "main": "index.js",
+  "scripts": {
+    "watch": "webpack --config webpack/webpack.dev.js --watch",
+    "build": "webpack --config webpack/webpack.prod.js",
+    "clean": "rimraf dist",
+    "style": "prettier --write \"src/**/*.{ts,tsx}\""
+  },
+  "author": "Alexey Sveshnikov",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexey-sveshnikov/utkonos-ext"
+  },
+  "dependencies": {
+    "es-cookie": "^1.4.0",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.1",
+    "styled-components": "^5.3.6"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.158",
+    "@types/react": "^17.0.50",
+    "@types/react-dom": "^17.0.17",
+    "@types/styled-components": "^5.1.26",
+    "copy-webpack-plugin": "^9.1.0",
+    "glob": "^7.2.3",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2 ",
+    "ts-loader": "^8.4.0",
+    "typescript": "^4.8.4",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-merge": "^5.0.0"
+  }
+}
