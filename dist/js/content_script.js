@@ -1,0 +1,1 @@
+(()=>{"use strict";for(const e of["js/vendor.js","js/injected_script.js"]){const t=document.createElement("script");t.src=chrome.runtime.getURL(e),document.documentElement.appendChild(t)}})();
