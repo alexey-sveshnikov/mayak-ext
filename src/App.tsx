@@ -47,7 +47,6 @@ function getItems(ref: RefObject<HTMLDivElement>): CartItem[] {
 
 export default function App() {
   const [visible, setVisible] = useState(false)
-  const [text, setText] = useState('')
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -76,17 +75,6 @@ export default function App() {
 
   }, [])
 
-  // const addItem = useCallback((s) => {
-  //   const items: CartItem[] = []
-  //   for (const m of text.matchAll(/https:\/\/www\.utkonos\.ru\/item\/(\d+)/g)) {
-  //     const id = m[1]
-  //     items.push({
-  //       id: parseInt(id),
-  //       quantity: 1,
-  //     })
-  //   }
-  // }, [text])
-  //
   return (
     <React.StrictMode>
       {visible && (
@@ -95,9 +83,7 @@ export default function App() {
             // onChange={(ev) => setText(ev.target.value)}
             contentEditable={true}
             ref={editorRef}
-          >
-            {text}
-          </TextArea>
+          />
           <button onClick={save}>
             Добавить
           </button>
