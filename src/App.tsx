@@ -51,7 +51,7 @@ export default function App() {
 
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
-      if ((ev.key == 'k' || ev.key == 'к') && ev.ctrlKey) {
+      if (ev.key == 'Escape' || ((ev.key == 'k' || ev.key == 'к') && ev.ctrlKey)) {
         setVisible(!visible)
       }
     }
@@ -89,7 +89,7 @@ export default function App() {
           </button>
         </Root>
       )}
-      <Badge />
+      <Badge onClick={() => setVisible(!visible)} />
     </React.StrictMode>
   )
 }
@@ -99,7 +99,7 @@ const Root = styled.div`
   width: 400px;
   height: 80vh;
   top: calc(50% - 40vh);
-  right: calc(50% - 150px);
+  right: 0;
   background: #ffd9d9;
   z-index: 1000;
   border: 1px solid #555;
@@ -127,7 +127,7 @@ const Badge = styled.div`
   right: 0;
   z-index: 1000;
   background: url(https://mayak.help/wp-content/themes/mayak/img/logo.png);
-  transform: scale(0.5);
+  transform: scale(0.8);
   -webkit-transform-origin-x: right;
   -webkit-transform-origin-y: top;
 `;
