@@ -1,48 +1,7 @@
-import React, { RefObject, useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
-import { CartItem, saveCartItems } from "./utkonos/cart";
-
-
-function getItems(ref: RefObject<HTMLDivElement>): CartItem[] {
-  if (ref.current == null) {
-    return []
-  }
-  const res = document.evaluate('.//a', ref.current, null, XPathResult.ORDERED_NODE_ITERATOR_TYPE)
-
-  let el = res.iterateNext()
-
-  const links: string[] = []
-
-  while (el !== null) {
-    if (el instanceof HTMLElement) {
-      const href = el.getAttribute('href')
-      if (href) {
-        links.push(href)
-      }
-    }
-    el = res.iterateNext()
-  }
-
-  const text = links.join("\n") + ref.current.textContent
-
-  const items: CartItem[] = [];
-  const seenItems = new Set<string>()
-
-  for (const m of text.matchAll(/https:\/\/www\.utkonos\.ru\/item\/(\d+)/g)) {
-    const id = m[1]
-    if (seenItems.has(id)) {
-      continue
-    }
-    seenItems.add(id)
-
-    items.push({
-      id: parseInt(id),
-      quantity: 1,
-    })
-  }
-
-  return items
-}
+import { saveCartItems } from "./utkonos/cart";
+import { extractData } from "./parsing";
 
 
 export default function App() {
@@ -62,17 +21,20 @@ export default function App() {
   }, [visible])
 
   const save = useCallback(() => {
-    const items = getItems(editorRef)
+    if (editorRef.current == null) return
 
-    if (items.length == 0) return
+    const items = extractData(editorRef.current)
+
+    if (items.length == 0) {
+      console.log('no data extracted')
+      return
+    }
 
     console.log('adding items', items)
-
     saveCartItems(items).then(() => {
       // @ts-ignore
       rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     })
-
   }, [])
 
   return (
@@ -80,7 +42,6 @@ export default function App() {
       {visible && (
         <Root>
           <TextArea
-            // onChange={(ev) => setText(ev.target.value)}
             contentEditable={true}
             ref={editorRef}
           />
