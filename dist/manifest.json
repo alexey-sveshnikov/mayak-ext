@@ -16,6 +16,9 @@
       "run_at": "document_end"
     }
   ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
   "permissions": [
     "storage"
   ],
@@ -33,5 +36,14 @@
         "*://*/*"
       ]
     }
-  ]
+  ],
+  "commands": {
+    "reload": {
+      "suggested_key": {
+        "default": "Ctrl+U",
+        "mac": "Command+U"
+      },
+      "description": "Reload extension (development)"
+    }
+  }
 }
