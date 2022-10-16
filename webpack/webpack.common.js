@@ -7,6 +7,7 @@ module.exports = {
   entry: {
     content_script: path.join(srcDir, 'content_script.tsx'),
     injected_script: path.join(srcDir, 'injected_script.tsx'),
+    background: path.join(srcDir, 'background.ts'),
   },
   output: {
     path: path.join(__dirname, '../dist/js'),

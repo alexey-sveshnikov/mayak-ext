@@ -1,39 +1,21 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
-import { saveCartItems } from "./utkonos/cart";
 import { extractData } from "./parsing";
+import { utkonosAPI } from "./utkonos/api";
+
 
 export default function App() {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [showProgress, setShowProgress] = useState(false)
 
-  useEffect(() => {
-    setTimeout(() => {
-      // @ts-ignore
-      rrToUtkAdapter.onCartItems(() => {
-        setShowProgress(false)
-      })
-    }, 1000)
-  }, [])
-
-  useEffect(() => {
-    const handler = (ev: KeyboardEvent) => {
-      if (ev.key == 'Escape' || ((ev.key == 'k' || ev.key == 'к') && ev.ctrlKey)) {
-        setVisible(!visible)
-      }
-    }
-    document.addEventListener('keyup', handler)
-    return () => {
-      document.removeEventListener('keyup', handler)
-    }
-  }, [visible])
+  useOnCartItemsHandler(() => setShowProgress(false))
+  useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
   const save = useCallback(() => {
     if (editorRef.current == null) return
 
     const items = extractData(editorRef.current)
-
     if (items.length == 0) {
       console.log('no data extracted')
       return
@@ -41,9 +23,11 @@ export default function App() {
 
     console.log('adding items', items)
     setShowProgress(true)
-    saveCartItems(items).then(() => {
+    utkonosAPI.saveCart(items).then(() => {
       // @ts-ignore
       rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
+    }).catch((err: unknown) => {
+      console.log('failed to save', err)
     })
   }, [])
 
@@ -66,12 +50,35 @@ export default function App() {
   )
 }
 
+function useOnCartItemsHandler(cb: () => void) {
+  useEffect(() => {
+    setTimeout(() => {
+      // @ts-ignore
+      rrToUtkAdapter.onCartItems(cb)
+    }, 1000)
+  }, [])
+}
+
+function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => void, deps: unknown[]) {
+  useEffect(() => {
+    const handler = (ev: KeyboardEvent) => {
+      if (filter(ev))
+        cb()
+    }
+    document.addEventListener('keyup', handler)
+    return () => {
+      document.removeEventListener('keyup', handler)
+    }
+  }, deps)
+}
+
+
 const Root = styled.div`
   position: fixed;
   width: 400px;
   height: 80vh;
   top: calc(50% - 40vh);
-  right: 0;
+  right: 5px;
   background: #ffd9d9;
   z-index: 1000;
   border: 1px solid #555;

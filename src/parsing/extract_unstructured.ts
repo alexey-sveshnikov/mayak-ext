@@ -1,5 +1,5 @@
-import { CartItem } from "../utkonos/cart";
-import { doXpath } from "./helpers";
+import { CartItem } from "../utkonos/api";
+import { doXpath } from "../sdk/xpath";
 
 export function extractFromUnstructuredText(element: HTMLElement): CartItem[] {
   const links: string[] = []
