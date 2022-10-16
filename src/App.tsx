@@ -55,10 +55,10 @@ export default function App() {
             contentEditable={true}
             ref={editorRef}
           />
-          <button onClick={save} disabled={showProgress}>
+          <Button onClick={save} disabled={showProgress}>
             {showProgress && "Сохраняем..."}
             {!showProgress && "Добавить"}
-          </button>
+          </Button>
         </Root>
       )}
       <Badge onClick={() => setVisible(!visible)} />
@@ -89,7 +89,15 @@ const TextArea = styled.div`
   border-radius: 7px;
   background: white;
   overflow: scroll;
+  
+  padding: 5px 10px;
 `;
+
+const Button = styled.button`
+  margin: 5px;
+  border: 1px solid black;
+  border-radius: 3px;
+`
 
 const Badge = styled.div`
   position: fixed;
