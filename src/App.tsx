@@ -3,10 +3,19 @@ import styled from 'styled-components';
 import { saveCartItems } from "./utkonos/cart";
 import { extractData } from "./parsing";
 
-
 export default function App() {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const [showProgress, setShowProgress] = useState(false)
+
+  useEffect(() => {
+    setTimeout(() => {
+      // @ts-ignore
+      rrToUtkAdapter.onCartItems(() => {
+        setShowProgress(false)
+      })
+    }, 1000)
+  }, [])
 
   useEffect(() => {
     const handler = (ev: KeyboardEvent) => {
@@ -31,6 +40,7 @@ export default function App() {
     }
 
     console.log('adding items', items)
+    setShowProgress(true)
     saveCartItems(items).then(() => {
       // @ts-ignore
       rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
@@ -45,8 +55,9 @@ export default function App() {
             contentEditable={true}
             ref={editorRef}
           />
-          <button onClick={save}>
-            Добавить
+          <button onClick={save} disabled={showProgress}>
+            {showProgress && "Сохраняем..."}
+            {!showProgress && "Добавить"}
           </button>
         </Root>
       )}
