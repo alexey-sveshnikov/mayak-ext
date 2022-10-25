@@ -24,10 +24,13 @@ export default function App() {
     console.log('adding items', items)
     setShowProgress(true)
     utkonosAPI.saveCart(items).then(() => {
+      window.location.reload()
       // @ts-ignore
-      rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
+      // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     }).catch((err: unknown) => {
       console.log('failed to save', err)
+      alert(`Не удалось сохранить: ${err}`)
+      window.location.reload()
     })
   }, [])
 
