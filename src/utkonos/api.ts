@@ -89,7 +89,7 @@ class UtkonosAPI {
     const formData = new FormData()
     formData.append("request", JSON.stringify(request))
 
-    const response = await fetch(`https://www.utkonos.ru/api/v1/${method}`, {
+    const response = await fetch(`https://www.utkonos.ru/api/rest/${method}`, {
       "headers": {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8",
