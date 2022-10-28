@@ -1,21 +1,9 @@
 import * as Cookies from 'es-cookie';
 import { uuidv4 } from "../sdk/helpers";
+import { CartItem } from "./types";
+import { UtkonosAPIException } from "./exceptions";
 
-
-export type CartItem = {
-  id: number;
-  quantity: number;
-}
-
-export class UtkonosAPIException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "UtkonosAPIException";
-  }
-}
-
-
-class UtkonosAPI {
+class UtkonosLegacyAPI {
   async saveCart(items: CartItem[]) {
     const ids: string[] = []
     const quantities: number[] = []
@@ -85,7 +73,7 @@ class UtkonosAPI {
       },
       "Body": requestBody,
     }
-    console.log("sending request to method", method, request)
+    console.log("[legacy API] sending request to method", method, request)
     const formData = new FormData()
     formData.append("request", JSON.stringify(request))
 
@@ -112,8 +100,9 @@ class UtkonosAPI {
     console.log(response)
     if (!response.ok)
       throw new UtkonosAPIException(response.statusText)
+
     return response
   }
 }
 
-export const utkonosAPI = new UtkonosAPI()
+export const utkonosLegacyAPI = new UtkonosLegacyAPI()
