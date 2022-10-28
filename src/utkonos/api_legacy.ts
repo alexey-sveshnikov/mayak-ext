@@ -1,6 +1,6 @@
 import * as Cookies from 'es-cookie';
 import { uuidv4 } from "../sdk/helpers";
-import { CartItem } from "./types";
+import { CartItem } from "../types";
 import { UtkonosAPIException } from "./exceptions";
 
 class UtkonosLegacyAPI {

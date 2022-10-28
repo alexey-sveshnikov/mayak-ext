@@ -30,7 +30,8 @@
     {
       "resources": [
         "js/injected_script.js",
-        "js/vendor.js"
+        "js/vendor.js",
+        "styles.css"
       ],
       "matches": [
         "*://*/*"
