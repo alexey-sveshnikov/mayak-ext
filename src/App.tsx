@@ -1,15 +1,22 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled from 'styled-components';
+import * as Cookies from 'es-cookie';
 import { extractData } from "./parsing";
-import { utkonosAPI } from "./utkonos/api";
+import { utkonosLegacyAPI } from "./utkonos/api_legacy";
+import { utkonosNewAPI } from "./utkonos/api_new";
 
 
 export default function App() {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
-  const [showProgress, setShowProgress] = useState(false)
+  const [progressState, setProgressState] = useState<string | null>(null)
 
-  useOnCartItemsHandler(() => setShowProgress(false))
+  const onNewVersion = useMemo(() => {
+    return Cookies.get('CanaryReleaseRouteV4') === 'lo'
+  }, [])
+
+
+  useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
   const save = useCallback(() => {
@@ -22,8 +29,23 @@ export default function App() {
     }
 
     console.log('adding items', items)
-    setShowProgress(true)
-    utkonosAPI.saveCart(items).then(() => {
+    let saveCart: (() => Promise<void>) | undefined
+    if (onNewVersion) {
+      saveCart = async () => {
+        let i = 0
+        for (const item of items) {
+          i++
+          setProgressState(`${i} из ${items.length}`)
+          await utkonosNewAPI.modifyCartItem(item)
+        }
+      }
+    } else {
+      saveCart = async () => {
+        await utkonosLegacyAPI.saveCart(items)
+      }
+    }
+
+    saveCart().then(() => {
       window.location.reload()
       // @ts-ignore
       // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
@@ -42,9 +64,14 @@ export default function App() {
             contentEditable={true}
             ref={editorRef}
           />
-          <Button onClick={save} disabled={showProgress}>
-            {showProgress && "Сохраняем..."}
-            {!showProgress && "Добавить"}
+          <Notes>
+            <div>
+              {onNewVersion ? "Версия сайта новая" : "Версия сайта старая"}
+            </div>
+          </Notes>
+          <Button onClick={save} disabled={!!progressState}>
+            {progressState && `Сохраняем... ${progressState}`}
+            {!progressState && "Добавить"}
           </Button>
         </Root>
       )}
@@ -102,6 +129,13 @@ const TextArea = styled.div`
   
   padding: 5px 10px;
 `;
+
+const Notes = styled.div`
+  font-size: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
 
 const Button = styled.button`
   margin: 5px;

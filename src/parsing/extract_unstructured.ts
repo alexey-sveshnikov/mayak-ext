@@ -1,4 +1,4 @@
-import { CartItem } from "../utkonos/api";
+import { CartItem } from "../utkonos/types";
 import { doXpath } from "../sdk/xpath";
 
 export function extractFromUnstructuredText(element: HTMLElement): CartItem[] {

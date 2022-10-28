@@ -1,4 +1,4 @@
-import { CartItem } from "../utkonos/api";
+import { CartItem } from "../utkonos/types";
 import { extractFromTable } from "./extract_from_table";
 import { extractFromUnstructuredText } from "./extract_unstructured";
 

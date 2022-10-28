@@ -1,4 +1,4 @@
-import { CartItem } from "../utkonos/api";
+import { CartItem } from "../utkonos/types";
 import { doXpath } from "../sdk/xpath";
 
 const isEqual = require("lodash/isEqual")
