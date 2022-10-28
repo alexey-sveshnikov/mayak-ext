@@ -1,6 +1,6 @@
 import * as Cookies from 'es-cookie';
 import { uuidv4 } from "../sdk/helpers";
-import { CartItem } from "./types";
+import { CartItem } from "../types";
 import { UtkonosAPIException } from "./exceptions";
 
 
@@ -14,13 +14,20 @@ type APIResponse = {
       Description: string
       Type: string
     }[]
+    CartList: {
+      CartNotices: {
+        CartNoticeList: {
+          Class: string // cart_exception_validate_stock,
+          Description: string // Извините, некоторые из выбранных товаров отсутствуют.,
+        }[]
+      }
+    }[]
   }
 }
 
 class UtkonosNewAPI {
-
-  async modifyCartItem(item: CartItem) {
-    return await this.makeRequest("cartItemModify", {
+  async modifyCartItem(item: CartItem): Promise<APIResponse> {
+    const data = await this.makeRequest("cartItemModify", {
       "GoodsItemId": item.id,
       "Quantity": item.quantity,
       "Return": {
@@ -28,6 +35,12 @@ class UtkonosNewAPI {
         "Goods": 0,
       }
     })
+
+    const cartNotice = data.Body.CartList[0]?.CartNotices?.CartNoticeList[0]?.Description
+    if (cartNotice) {
+      throw new UtkonosAPIException(cartNotice)
+    }
+    return data
   }
 
   //   fetch("https://www.utkonos.ru/api/rest/cartItemModify", {
@@ -63,7 +76,7 @@ class UtkonosNewAPI {
   //   "credentials": "include"
   // });
   //
-  async makeRequest(method: string, requestBody: unknown) {
+  async makeRequest(method: string, requestBody: unknown): Promise<APIResponse> {
     const sessionToken = await Cookies.get('Utk_SessionToken')
     const deviceId = await Cookies.get('Utk_DvcGuid')
 
@@ -83,8 +96,9 @@ class UtkonosNewAPI {
     }
     console.log("[new API] sending request to method", method, request)
 
-    const formData = new URLSearchParams()
-    formData.append("request", JSON.stringify(request))
+    // const formData = new URLSearchParams()
+    // formData.append("request", JSON.stringify(request))
+    const formData = `request=${JSON.stringify(request)}`
 
     const response = await fetch(`https://www.utkonos.ru/api/rest/${method}`, {
       "headers": {
@@ -106,11 +120,11 @@ class UtkonosNewAPI {
       "mode": "cors",
       "credentials": "include"
     });
-    console.log(response)
     if (!response.ok)
       throw new UtkonosAPIException(response.statusText)
 
     const data = await response.json() as APIResponse
+    console.log('response: ', data)
 
     if (data.Body.ErrorList) {
       throw  new UtkonosAPIException(data.Body.ErrorList[0].Message)

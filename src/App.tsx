@@ -4,70 +4,108 @@ import * as Cookies from 'es-cookie';
 import { extractData } from "./parsing";
 import { utkonosLegacyAPI } from "./utkonos/api_legacy";
 import { utkonosNewAPI } from "./utkonos/api_new";
-
+import { UtkonosAPIException } from "./utkonos/exceptions";
 
 export default function App() {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
+  const [notes, setNotes] = useState<string[]>([])
 
   const onNewVersion = useMemo(() => {
     return Cookies.get('CanaryReleaseRouteV4') === 'lo'
   }, [])
 
 
-  useOnCartItemsHandler(() => setProgressState(null))
+  // useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
+  const onPaste = useCallback(() => {
+    setNotes([])
+    if (!editorRef.current)
+      return
+
+    setTimeout(() => {
+      if (!editorRef.current) return
+
+      editorRef.current && prepareTextareaContent(editorRef.current)
+
+      const { cartItems, rejectedRows, withCounts } = extractData(editorRef.current)
+      if (!withCounts) {
+        setNotes(["Не удалось распознать колонку таблицы с количествами – везде будут '1'", ...notes])
+      }
+      for (const item of cartItems) {
+        if (item.warning && item.tableRow) {
+          item.tableRow.setAttribute('style', 'background: orange;')
+        }
+      }
+      for (const el of rejectedRows) {
+        el.setAttribute('style', 'background: grey;')
+      }
+    }, 100)
+  }, [editorRef, notes])
+
   const save = useCallback(() => {
+    setNotes([])
     if (editorRef.current == null) return
 
-    const items = extractData(editorRef.current)
-    if (items.length == 0) {
+    const { cartItems } = extractData(editorRef.current)
+    if (cartItems.length == 0) {
       console.log('no data extracted')
       return
     }
 
-    console.log('adding items', items)
+    console.log('adding items', cartItems)
     let saveCart: (() => Promise<void>) | undefined
     if (onNewVersion) {
       saveCart = async () => {
         let i = 0
-        for (const item of items) {
+        for (const item of cartItems) {
           i++
-          setProgressState(`${i} из ${items.length}`)
-          await utkonosNewAPI.modifyCartItem(item)
+          setProgressState(`${i} из ${cartItems.length}`)
+          try {
+            await utkonosNewAPI.modifyCartItem(item)
+          } catch (err) {
+            if (err instanceof UtkonosAPIException && item.tableRow) {
+              console.log("item is failed to save: ", item)
+              item.tableRow.setAttribute('style', 'background: #ffb0b0;')
+            }
+          }
         }
       }
     } else {
       saveCart = async () => {
-        await utkonosLegacyAPI.saveCart(items)
+        await utkonosLegacyAPI.saveCart(cartItems)
       }
     }
 
     saveCart().then(() => {
-      window.location.reload()
+      setProgressState(null)
+      // window.location.reload()
       // @ts-ignore
       // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     }).catch((err: unknown) => {
+      setProgressState(null)
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
-      window.location.reload()
+      // window.location.reload()
     })
   }, [])
 
   return (
     <React.StrictMode>
       {visible && (
-        <Root>
+        <Root className="utkonos-ext-root">
           <TextArea
             contentEditable={true}
             ref={editorRef}
+            onPaste={onPaste}
           />
           <Notes>
             <div>
               {onNewVersion ? "Версия сайта новая" : "Версия сайта старая"}
             </div>
+            {notes.map(x => <div id={x}>{x}</div>)}
           </Notes>
           <Button onClick={save} disabled={!!progressState}>
             {progressState && `Сохраняем... ${progressState}`}
@@ -80,14 +118,14 @@ export default function App() {
   )
 }
 
-function useOnCartItemsHandler(cb: () => void) {
-  useEffect(() => {
-    setTimeout(() => {
-      // @ts-ignore
-      rrToUtkAdapter.onCartItems(cb)
-    }, 1000)
-  }, [])
-}
+// function useOnCartItemsHandler(cb: () => void) {
+//   useEffect(() => {
+//     setTimeout(() => {
+//       @ts-ignore
+// rrToUtkAdapter.onCartItems(cb)
+// }, 1000)
+// }, [])
+// }
 
 function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => void, deps: unknown[]) {
   useEffect(() => {
@@ -100,6 +138,35 @@ function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => vo
       document.removeEventListener('keyup', handler)
     }
   }, deps)
+}
+
+function prepareTextareaContent(startNode: Node) {
+  clearCustomStyling(startNode)
+}
+
+function clearCustomStyling(startNode: Node) {
+  let node
+  const iterator = document.createNodeIterator(
+    startNode,
+    NodeFilter.SHOW_ALL,
+  );
+
+  while (node = iterator.nextNode() as Element) {
+    node.removeAttribute && node.removeAttribute('style')
+  }
+}
+
+function clearNodes(startNode: Node, predicate: (n: Element) => boolean) {
+  let node
+  const iterator = document.createNodeIterator(
+    startNode,
+    NodeFilter.SHOW_ALL,
+  );
+
+  while (node = iterator.nextNode() as Element) {
+    if (predicate(node))
+      node.remove()
+  }
 }
 
 
@@ -126,6 +193,8 @@ const TextArea = styled.div`
   border-radius: 7px;
   background: white;
   overflow: scroll;
+  
+  font-size: 0.8em;
   
   padding: 5px 10px;
 `;

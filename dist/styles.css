@@ -1,0 +1,19 @@
+.utkonos-ext-root tr {
+    all: initial;
+    display: table-row;
+    border: 1px solid lightgrey;
+}
+
+.utkonos-ext-root td {
+    all: initial;
+    display: table-cell;
+    margin: 5px 3px;
+}
+
+.utkonos-ext-root textarea {
+    overflow: scroll;
+}
+
+.utkonos-ext-root br {
+    display: none;
+}
