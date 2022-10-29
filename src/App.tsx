@@ -66,7 +66,7 @@ export default function App() {
           try {
             await utkonosNewAPI.modifyCartItem(item)
           } catch (err) {
-            if (err instanceof UtkonosAPIException && item.tableRow) {
+            if (item.tableRow) {
               console.log("item is failed to save: ", item)
               item.tableRow.setAttribute('style', 'background: #ffb0b0;')
             }
