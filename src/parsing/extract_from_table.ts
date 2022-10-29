@@ -13,7 +13,6 @@ export function extractFromTable(element: HTMLElement): { cartItems: CartItem[],
   console.table(tableData)
 
   const quantitiesColumn = findQuantitiesColumn(tableData)
-  debugger
   if (quantitiesColumn === undefined) {
     console.log("can't find quantities column")
     return { cartItems: [], rejectedRows: [] }
@@ -87,26 +86,26 @@ function parseTable(element: HTMLElement): [string[][], Element[]] {
 
 
 function findQuantitiesColumn(tableData: string[][]): number | undefined {
-  const avgFilledCellsNumber = Math.round(
-    tableData
-      .map(row => row.filter(x => !!x.trim()).length)
-      .reduce((prev, len) => prev + len, 0)
-    / tableData.length
+  // filter out possible headers/footers
+  let filteredRows = tableData.filter(
+    row => row.filter(cell => !isNaN(parseFloat(cell.trim()))).length > 0 // there are at least some numeric values
   )
 
-  // filter out possible headers/footers
-  const filteredRows = tableData
-    .filter(
-      row => row.filter(cell => !!cell.trim()).length == avgFilledCellsNumber // cells count = avg count
-    )
-    .filter(
-      row => row.filter(cell => !isNaN(parseFloat(cell.trim()))).length > 0 // there are at least some numeric values
-    )
+  const avgFilledCellsNumber = Math.round(
+    filteredRows
+      .map(row => row.filter(x => !!x.trim()).length)
+      .reduce((prev, len) => prev + len, 0)
+    / filteredRows.length
+  )
+
+  filteredRows = filteredRows.filter(
+    row => row.filter(cell => !!cell.trim()).length == avgFilledCellsNumber // cells count = avg count
+  )
 
   console.log("Detecting quantities column. This is the filtered data")
   console.table(filteredRows)
 
-  for (let i = 0; i < filteredRows[0].length; i++) {
+  for (let i = 0; i < filteredRows[0]?.length; i++) {
     const columnData = filteredRows.map(row => row[i])
     // if (filteredRows[0][i].indexOf('utkonos.ru') != -1) {
     //   console.log(`column ${i} seems to contain links`)

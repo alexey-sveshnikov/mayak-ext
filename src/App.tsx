@@ -142,6 +142,7 @@ function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => vo
 
 function prepareTextareaContent(startNode: Node) {
   clearCustomStyling(startNode)
+  setLinksTarget(startNode)
 }
 
 function clearCustomStyling(startNode: Node) {
@@ -156,7 +157,7 @@ function clearCustomStyling(startNode: Node) {
   }
 }
 
-function clearNodes(startNode: Node, predicate: (n: Element) => boolean) {
+function setLinksTarget(startNode: Node) {
   let node
   const iterator = document.createNodeIterator(
     startNode,
@@ -164,8 +165,8 @@ function clearNodes(startNode: Node, predicate: (n: Element) => boolean) {
   );
 
   while (node = iterator.nextNode() as Element) {
-    if (predicate(node))
-      node.remove()
+    if (node.tagName == 'a')
+      node.setAttribute('target', '_blank')
   }
 }
 
