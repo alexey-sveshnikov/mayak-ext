@@ -19,7 +19,7 @@ export function extractFromUnstructuredText(element: HTMLElement): CartItem[] {
   const items: CartItem[] = [];
   const seenItems = new Set<string>()
 
-  for (const m of text.matchAll(/https:\/\/www\.utkonos\.ru\/item\/(\d+)/g)) {
+  for (const m of text.matchAll(/utkonos\.ru\/item\/(\d+)/g)) {
     const id = m[1]
     if (seenItems.has(id)) {
       continue
