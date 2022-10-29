@@ -7,7 +7,9 @@
     {
       "matches": [
         "https://utkonos.ru/*",
-        "https://www.utkonos.ru/*"
+        "https://www.utkonos.ru/*",
+        "https://adm.utkonos.ru/*",
+        "https://www.adm.utkonos.ru/*"
       ],
       "js": [
         "js/vendor.js",
@@ -24,7 +26,9 @@
   ],
   "host_permissions": [
     "https://utkonos.ru/*",
-    "https://wwww.utkonos.ru/*"
+    "https://wwww.utkonos.ru/*",
+    "https://adm.utkonos.ru/*",
+    "https://wwww.adm.utkonos.ru/*"
   ],
   "web_accessible_resources": [
     {
