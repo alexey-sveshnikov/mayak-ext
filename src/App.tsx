@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
 import * as Cookies from 'es-cookie';
 import { extractData } from "./parsing";
 import { utkonosLegacyAPI } from "./utkonos/api_legacy";
 import { utkonosNewAPI } from "./utkonos/api_new";
-import { UtkonosAPIException } from "./utkonos/exceptions";
 
 export default function App() {
   const [visible, setVisible] = useState(false)
@@ -12,10 +11,10 @@ export default function App() {
   const [progressState, setProgressState] = useState<string | null>(null)
   const [notes, setNotes] = useState<string[]>([])
 
-  const onNewVersion = useMemo(() => {
-    return Cookies.get('CanaryReleaseRouteV4') === 'lo'
-  }, [])
+  const onLegacyDomain = window.location.host.match(/adm\.utkonos\.ru/)
+  const onNewCanaryRelease = Cookies.get('CanaryReleaseRouteV4') === 'lo'
 
+  const onNewVersion = !onLegacyDomain && onNewCanaryRelease
 
   // useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
@@ -81,14 +80,16 @@ export default function App() {
 
     saveCart().then(() => {
       setProgressState(null)
-      // window.location.reload()
+      if (!onNewVersion)
+        window.location.reload()
       // @ts-ignore
       // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     }).catch((err: unknown) => {
       setProgressState(null)
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
-      // window.location.reload()
+      if (!onNewVersion)
+        window.location.reload()
     })
   }, [])
 

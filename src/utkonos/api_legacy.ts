@@ -58,11 +58,12 @@ class UtkonosLegacyAPI {
   async makeRequest(method: string, requestBody: unknown) {
     const deviceData = JSON.parse(localStorage.getItem('device_data') || '{}')
     const sessionToken = await Cookies.get('Utk_SessionToken')
+    const host = window.location.host
 
     const request = {
       "Head": {
         "DeviceId": deviceData['device_id'],
-        "Domain": "adm.utkonos.ru",
+        "Domain": host,
         "RequestId": uuidv4().replaceAll(/-/g, ''),
         "MarketingPartnerKey": "mp-cc3c743ffd17487a9021d11129548218",
         "Version": "utkonos-ext",
@@ -77,7 +78,7 @@ class UtkonosLegacyAPI {
     const formData = new FormData()
     formData.append("request", JSON.stringify(request))
 
-    const response = await fetch(`https://adm.utkonos.ru/api/rest/${method}`, {
+    const response = await fetch(`https://${host}/api/rest/${method}`, {
       "headers": {
         "accept": "application/json, text/plain, */*",
         "accept-language": "en-US,en;q=0.9,ru;q=0.8",
@@ -90,7 +91,7 @@ class UtkonosLegacyAPI {
         "sec-fetch-mode": "cors",
         "sec-fetch-site": "same-origin"
       },
-      "referrer": "https://adm.utkonos.ru/",
+      "referrer": `https://${host}/`,
       "referrerPolicy": "no-referrer-when-downgrade",
       "body": formData,
       "method": "POST",
