@@ -32,6 +32,12 @@ class UtkonosLegacyAPI {
     return this.makeRequest("goodsItemSearchByid", requestBody)
   }
 
+  async cartPromocodeAdd(code: string) {
+    await this.makeRequest('cartPromocodeAdd', {
+      Code: code,
+    })
+  }
+
   // searchById
   //   fetch("https://www.utkonos.ru/api/v1/goodsItemSearchByid", {
   //   "headers": {

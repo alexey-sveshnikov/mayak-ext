@@ -3,6 +3,9 @@
   "name": "Плагин для заполнения корзины в Утконосе",
   "description": "",
   "version": "1.0",
+  "options_ui": {
+    "page": "options.html"
+  },
   "content_scripts": [
     {
       "matches": [

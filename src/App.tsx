@@ -5,7 +5,17 @@ import { extractData } from "./parsing";
 import { utkonosLegacyAPI } from "./utkonos/api_legacy";
 import { utkonosNewAPI } from "./utkonos/api_new";
 
-export default function App() {
+declare global {
+  interface Window {
+    promocode: string;
+  }
+}
+
+type Props = {
+  promocode: string;
+}
+
+export default function App(props: Props) {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
@@ -16,11 +26,15 @@ export default function App() {
 
   const onNewVersion = !onLegacyDomain && onNewCanaryRelease
 
+  const promocode = props.promocode
+
   // useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
   const onPaste = useCallback(() => {
     setNotes([])
+    const notes: string [] = []
+
     if (!editorRef.current)
       return
 
@@ -43,6 +57,16 @@ export default function App() {
       }
     }, 100)
   }, [editorRef, notes])
+
+  const applyPromocode = useCallback(async () => {
+    if (promocode) {
+      const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
+      setProgressState("применяем промокод")
+      await utkonosLegacyAPI.cartPromocodeAdd(promocode)
+      setProgressState("")
+      setNotes(["Промокод попробовали применить! Результат нужно проверить!", ...notes])
+    }
+  }, [promocode, onNewVersion, notes])
 
   const save = useCallback(() => {
     setNotes([])
@@ -71,14 +95,18 @@ export default function App() {
             }
           }
         }
+        await applyPromocode()
       }
     } else {
       saveCart = async () => {
         await utkonosLegacyAPI.saveCart(cartItems)
+        await applyPromocode()
       }
     }
 
     saveCart().then(() => {
+      setProgressState("применяем промокод")
+
       setProgressState(null)
       if (!onNewVersion)
         window.location.reload()
@@ -91,7 +119,7 @@ export default function App() {
       if (!onNewVersion)
         window.location.reload()
     })
-  }, [])
+  }, [applyPromocode])
 
   return (
     <React.StrictMode>
@@ -106,7 +134,8 @@ export default function App() {
             <div>
               {onNewVersion ? "Версия сайта новая" : "Версия сайта старая"}
             </div>
-            {notes.map(x => <div id={x}>{x}</div>)}
+            {promocode && <div>Используется промокод {promocode}</div>}
+            {notes.map(x => <div key={x}>{x}</div>)}
           </Notes>
           <Button onClick={save} disabled={!!progressState}>
             {progressState && `Сохраняем... ${progressState}`}

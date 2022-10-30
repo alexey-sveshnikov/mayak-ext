@@ -43,6 +43,12 @@ class UtkonosNewAPI {
     return data
   }
 
+  async cartPromocodeAdd(code: string) {
+    await this.makeRequest('cartPromocodeAdd', {
+      Code: code,
+    })
+  }
+
   //   fetch("https://www.utkonos.ru/api/rest/cartItemModify", {
   //   "headers": {
   //     "accept": "application/json, text/plain, */*",
