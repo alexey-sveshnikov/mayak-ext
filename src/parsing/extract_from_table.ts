@@ -24,7 +24,7 @@ export function extractFromTable(element: HTMLElement): { cartItems: CartItem[],
   for (let i = 0; i < tableData.length; i++) {
     const row = tableData[i]
 
-    if (row.filter(cell => !isNaN(parseFloat(cell.trim()))).length == 0) {
+    if (row.filter(cell => !isNaN(parseFloat(cell?.trim()))).length == 0) {
       console.log('filter out possible header of footer row: ', row)
       continue
     }
@@ -88,18 +88,18 @@ function parseTable(element: HTMLElement): [string[][], Element[]] {
 function findQuantitiesColumn(tableData: string[][]): number | undefined {
   // filter out possible headers/footers
   let filteredRows = tableData.filter(
-    row => row.filter(cell => !isNaN(parseFloat(cell.trim()))).length > 0 // there are at least some numeric values
+    row => row.filter(cell => !isNaN(parseFloat(cell?.trim()))).length > 0 // there are at least some numeric values
   )
 
   const avgFilledCellsNumber = Math.round(
     filteredRows
-      .map(row => row.filter(x => !!x.trim()).length)
+      .map(row => row.filter(x => !!x?.trim()).length)
       .reduce((prev, len) => prev + len, 0)
     / filteredRows.length
   )
 
   filteredRows = filteredRows.filter(
-    row => row.filter(cell => !!cell.trim()).length == avgFilledCellsNumber // cells count = avg count
+    row => row.filter(cell => !!cell?.trim()).length == avgFilledCellsNumber // cells count = avg count
   )
 
   console.log("Detecting quantities column. This is the filtered data")
@@ -113,7 +113,7 @@ function findQuantitiesColumn(tableData: string[][]): number | undefined {
     //   continue
     // }
 
-    const numericValues = columnData.map(x => parseFloat(x.trim()))
+    const numericValues = columnData.map(x => parseFloat(x?.trim()))
     if (numericValues.find(isNaN) !== undefined) {
       console.log(`column ${i} is not all numbers`)
       continue
