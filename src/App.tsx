@@ -70,6 +70,7 @@ export default function App(props: Props) {
 
   const save = useCallback(() => {
     setNotes([])
+    const notes: string[] = []
     if (editorRef.current == null) return
 
     const { cartItems } = extractData(editorRef.current)
@@ -78,17 +79,19 @@ export default function App(props: Props) {
       return
     }
 
-    const saveCart = async () => {
+    const saveCart = async (): Promise<number> => {
       console.log('adding items', cartItems)
 
       const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
 
       let i = 0
+      let savedCount = 0
       for (const item of cartItems) {
         i++
         setProgressState(`${i} из ${cartItems.length}`)
         try {
           await api.modifyCartItem(item)
+          savedCount++
         } catch (err) {
           if (item.tableRow) {
             console.log("item is failed to save: ", item)
@@ -97,12 +100,23 @@ export default function App(props: Props) {
           }
         }
       }
-      await applyPromocode()
+      setProgressState("применяем промокод")
+      try {
+        await applyPromocode()
+      } catch (e) {
+        console.log('failed to apply promocode', e)
+        alert("Не удалось применить промокод: " + e)
+      }
+      return savedCount
     }
 
-    saveCart().then(() => {
-      setProgressState("применяем промокод")
-
+    saveCart().then((successCount) => {
+      setNotes([
+        `Сохранили успешно ${successCount} товаров из ${cartItems.length}.`,
+        `Товары, которые не удалось сохранить отмечены красным цветом`,
+        `Изменения в корзине будут видны после перезагрузки страницы`,
+        ...notes,
+      ])
       setProgressState(null)
       // window.location.reload()
       // @ts-ignore
