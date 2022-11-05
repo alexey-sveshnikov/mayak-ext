@@ -204,8 +204,10 @@ function setLinksTarget(startNode: Node) {
   );
 
   while (node = iterator.nextNode() as Element) {
-    if (node.tagName == 'a')
+    if (node.tagName == 'A') {
+
       node.setAttribute('target', '_blank')
+    }
   }
 }
 
