@@ -86,8 +86,12 @@ function parseTable(element: HTMLElement): [string[][], Element[]] {
 
 
 function findQuantitiesColumn(tableData: string[][]): number | undefined {
+  let filteredRows = tableData.map(
+    row => row.map(cell => cell.replace(/\s*(штук|шт)\.?\s*/ig, ''))
+  )
+
   // filter out possible headers/footers
-  let filteredRows = tableData.filter(
+  filteredRows = filteredRows.filter(
     row => row.filter(cell => !isNaN(parseFloat(cell?.trim()))).length > 0 // there are at least some numeric values
   )
 
@@ -120,7 +124,7 @@ function findQuantitiesColumn(tableData: string[][]): number | undefined {
     }
 
     if (numericValues.every((x, i) => {
-      return i === 0 || x >= numericValues[i - 1];
+      return i === 0 || x > numericValues[i - 1];
     })) {
       console.log(`column ${i} looks like a row numbers`)
       continue

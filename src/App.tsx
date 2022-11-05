@@ -78,46 +78,41 @@ export default function App(props: Props) {
       return
     }
 
-    console.log('adding items', cartItems)
-    let saveCart: (() => Promise<void>) | undefined
-    if (onNewVersion) {
-      saveCart = async () => {
-        let i = 0
-        for (const item of cartItems) {
-          i++
-          setProgressState(`${i} из ${cartItems.length}`)
-          try {
-            await utkonosNewAPI.modifyCartItem(item)
-          } catch (err) {
-            if (item.tableRow) {
-              console.log("item is failed to save: ", item)
-              item.tableRow.setAttribute('style', 'background: #ffb0b0;')
-            }
+    const saveCart = async () => {
+      console.log('adding items', cartItems)
+
+      const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
+
+      let i = 0
+      for (const item of cartItems) {
+        i++
+        setProgressState(`${i} из ${cartItems.length}`)
+        try {
+          await api.modifyCartItem(item)
+        } catch (err) {
+          if (item.tableRow) {
+            console.log("item is failed to save: ", item)
+            console.log("error was: ", err)
+            item.tableRow.setAttribute('style', 'background: #ffb0b0;')
           }
         }
-        await applyPromocode()
       }
-    } else {
-      saveCart = async () => {
-        await utkonosLegacyAPI.saveCart(cartItems)
-        await applyPromocode()
-      }
+      await applyPromocode()
     }
 
     saveCart().then(() => {
       setProgressState("применяем промокод")
 
       setProgressState(null)
-      if (!onNewVersion)
-        window.location.reload()
+      // window.location.reload()
       // @ts-ignore
       // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     }).catch((err: unknown) => {
       setProgressState(null)
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
-      if (!onNewVersion)
-        window.location.reload()
+      // if (!onNewVersion)
+      //   window.location.reload()
     })
   }, [applyPromocode])
 

@@ -3,8 +3,29 @@ import { uuidv4 } from "../sdk/helpers";
 import { CartItem } from "../types";
 import { UtkonosAPIException } from "./exceptions";
 
+type APIResponse = {
+  Body: {
+    ErrorList: {
+      Class: string
+      Data: unknown
+      Code: string
+      Message: string
+      Description: string
+      Type: string
+    }[]
+    CartList: {
+      CartNotices: {
+        CartNoticeList: {
+          Class: string // cart_exception_validate_stock,
+          Description: string // Извините, некоторые из выбранных товаров отсутствуют.,
+        }[]
+      }
+    }[]
+  }
+}
+
 class UtkonosLegacyAPI {
-  async saveCart(items: CartItem[]) {
+  async saveCartBulk(items: CartItem[]) {
     const ids: string[] = []
     const quantities: number[] = []
 
@@ -20,6 +41,23 @@ class UtkonosLegacyAPI {
       "Return": { "Cart": "0", "CartItemList": "0", "TotalCost": "0" }
     }
     return this.makeRequest("cartItemMultiAdd", requestBody)
+  }
+
+  async modifyCartItem(item: CartItem) {
+    const response = await this.makeRequest("cartItemModify", {
+      "GoodsItemId": item.id.toString(),
+      "Quantity": item.quantity,
+      "Return": { "Cart": 1, "CartItemList": 0, "TotalCost": 0 },
+      "Source": null,
+      "SourceId": null,
+    })
+
+    const cartNotice = (response.Body.CartList || [])[0]?.CartNotices?.CartNoticeList[0]?.Description
+    if (cartNotice) {
+      throw new UtkonosAPIException(cartNotice)
+    }
+
+    return response
   }
 
   async goodsItemSearchByid(id: number) {
@@ -61,7 +99,7 @@ class UtkonosLegacyAPI {
   //   "credentials": "include"
   // });
 
-  async makeRequest(method: string, requestBody: unknown) {
+  async makeRequest(method: string, requestBody: unknown): Promise<APIResponse> {
     const deviceData = JSON.parse(localStorage.getItem('device_data') || '{}')
     const sessionToken = await Cookies.get('Utk_SessionToken')
     const host = window.location.host
@@ -104,11 +142,18 @@ class UtkonosLegacyAPI {
       "mode": "cors",
       "credentials": "include"
     });
-    console.log(response)
+
     if (!response.ok)
       throw new UtkonosAPIException(response.statusText)
 
-    return response
+    const data = await response.json() as APIResponse
+    console.log('response: ', data)
+
+    if (data.Body.ErrorList) {
+      throw  new UtkonosAPIException(data.Body.ErrorList[0].Description)
+    }
+
+    return data
   }
 }
 
