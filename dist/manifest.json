@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Плагин для заполнения корзины в Утконосе",
+  "name": "Плагин для заполнения корзины в Ленте",
   "description": "",
   "version": "1.0",
   "options_ui": {
@@ -9,10 +9,6 @@
   "content_scripts": [
     {
       "matches": [
-        "https://utkonos.ru/*",
-        "https://www.utkonos.ru/*",
-        "https://adm.utkonos.ru/*",
-        "https://www.adm.utkonos.ru/*",
         "https://lenta.com/*"
       ],
       "js": [
@@ -29,10 +25,6 @@
     "storage"
   ],
   "host_permissions": [
-    "https://utkonos.ru/*",
-    "https://wwww.utkonos.ru/*",
-    "https://adm.utkonos.ru/*",
-    "https://wwww.adm.utkonos.ru/*",
     "https://lenta.com/*"
   ],
   "web_accessible_resources": [

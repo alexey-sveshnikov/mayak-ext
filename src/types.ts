@@ -4,5 +4,6 @@
     quantity: number
     tableRow?: Element // строка таблицы, где элемент был найден (чтобы подсветить ошибки)
     warning?: boolean
+    error?: string
   }
 

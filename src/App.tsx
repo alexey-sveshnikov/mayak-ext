@@ -70,35 +70,35 @@ export default function App(props: Props) {
       return
     }
 
-    // saveCart = async (): Promise<number> => {
-    //   console.log('adding items', cartItems)
-    //   let i = 0
-    //   let savedCount = 0
-    //   for (const item of cartItems) {
-    //     i++
-    //     setProgressState(`${i} из ${cartItems.length}`)
-    //     try {
-    //       await api.modifyCartItem(item)
-    //       savedCount++
-    //     } catch (err) {
-    //       if (item.tableRow) {
-    //         console.log("item is failed to save: ", item)
-    //         console.log("error was: ", err)
-    //         item.tableRow.setAttribute('style', 'background: #ffb0b0;')
-    //       }
-    //     }
-    //   }
-    //   setProgressState("применяем промокод")
-    //   try {
-    //     await applyPromocode()
-    //   } catch (e) {
-    //     console.log('failed to apply promocode', e)
-    //     alert("Не удалось применить промокод: " + e)
-    //   }
-    //   return savedCount
-    // }
+    const saveCart = async (): Promise<number> => {
+      console.log('adding items', cartItems)
 
-    lentaAPI.saveCart(cartItems).then((successCount) => {
+      const firstAttempt = await lentaAPI.saveCart(cartItems)
+
+      for (const item of firstAttempt.rejectedItems) {
+        console.log("item is failed to save: ", item)
+        console.log("error was: ", item.error)
+        if (item.tableRow)
+          item.tableRow.setAttribute('style', 'background: #ffb0b0;')
+      }
+
+      if (firstAttempt.success) {
+        return firstAttempt.validItems.length
+      } else {
+        const secondAttempt = await lentaAPI.saveCart(firstAttempt.validItems)
+        if (secondAttempt.success) {
+          return secondAttempt.validItems.length
+        } else {
+          setNotes([
+            "Ошибка при сохранении, должно помочь повторное сохранение",
+            ...notes
+          ])
+          throw new Error()
+        }
+      }
+    }
+
+    saveCart().then((successCount) => {
       setNotes([
         `Сохранили успешно ${successCount} товаров из ${cartItems.length}.`,
         `Товары, которые не удалось сохранить отмечены красным цветом`,
@@ -106,7 +106,7 @@ export default function App(props: Props) {
         ...notes,
       ])
       setProgressState(null)
-      window.location.reload()
+      // window.location.reload()
     }).catch((err: unknown) => {
       setProgressState(null)
       console.log('failed to save', err)
