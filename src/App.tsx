@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
-import * as Cookies from 'es-cookie';
 import { extractData } from "./parsing";
-import { utkonosLegacyAPI } from "./utkonos/api_legacy";
-import { utkonosNewAPI } from "./utkonos/api_new";
+import { lentaAPI } from "./clients/api_lenta";
 
 declare global {
   interface Window {
@@ -16,19 +14,13 @@ type Props = {
 }
 
 export default function App(props: Props) {
-  const [visible, setVisible] = useState(false)
+  const [visible, setVisible] = useState(true)
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
   const [notes, setNotes] = useState<string[]>([])
 
-  const onLegacyDomain = window.location.host.match(/adm\.utkonos\.ru/)
-  const onNewCanaryRelease = Cookies.get('CanaryReleaseRouteV4') === 'lo'
-
-  const onNewVersion = !onLegacyDomain && onNewCanaryRelease
-
   const promocode = props.promocode
 
-  // useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
   const onPaste = useCallback(() => {
@@ -59,14 +51,13 @@ export default function App(props: Props) {
   }, [editorRef, notes])
 
   const applyPromocode = useCallback(async () => {
-    if (promocode) {
-      const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
-      setProgressState("применяем промокод")
-      await utkonosLegacyAPI.cartPromocodeAdd(promocode)
-      setProgressState("")
-      setNotes(["Промокод попробовали применить! Результат нужно проверить!", ...notes])
-    }
-  }, [promocode, onNewVersion, notes])
+    // if (promocode) {
+    //   setProgressState("применяем промокод")
+    //   await lentaAPI.cartPromocodeAdd(promocode)
+    //   setProgressState("")
+    //   setNotes(["Промокод попробовали применить! Результат нужно проверить!", ...notes])
+    // }
+  }, [promocode, notes])
 
   const save = useCallback(() => {
     setNotes([])
@@ -79,38 +70,35 @@ export default function App(props: Props) {
       return
     }
 
-    const saveCart = async (): Promise<number> => {
-      console.log('adding items', cartItems)
+    // saveCart = async (): Promise<number> => {
+    //   console.log('adding items', cartItems)
+    //   let i = 0
+    //   let savedCount = 0
+    //   for (const item of cartItems) {
+    //     i++
+    //     setProgressState(`${i} из ${cartItems.length}`)
+    //     try {
+    //       await api.modifyCartItem(item)
+    //       savedCount++
+    //     } catch (err) {
+    //       if (item.tableRow) {
+    //         console.log("item is failed to save: ", item)
+    //         console.log("error was: ", err)
+    //         item.tableRow.setAttribute('style', 'background: #ffb0b0;')
+    //       }
+    //     }
+    //   }
+    //   setProgressState("применяем промокод")
+    //   try {
+    //     await applyPromocode()
+    //   } catch (e) {
+    //     console.log('failed to apply promocode', e)
+    //     alert("Не удалось применить промокод: " + e)
+    //   }
+    //   return savedCount
+    // }
 
-      const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
-
-      let i = 0
-      let savedCount = 0
-      for (const item of cartItems) {
-        i++
-        setProgressState(`${i} из ${cartItems.length}`)
-        try {
-          await api.modifyCartItem(item)
-          savedCount++
-        } catch (err) {
-          if (item.tableRow) {
-            console.log("item is failed to save: ", item)
-            console.log("error was: ", err)
-            item.tableRow.setAttribute('style', 'background: #ffb0b0;')
-          }
-        }
-      }
-      setProgressState("применяем промокод")
-      try {
-        await applyPromocode()
-      } catch (e) {
-        console.log('failed to apply promocode', e)
-        alert("Не удалось применить промокод: " + e)
-      }
-      return savedCount
-    }
-
-    saveCart().then((successCount) => {
+    lentaAPI.saveCart(cartItems).then((successCount) => {
       setNotes([
         `Сохранили успешно ${successCount} товаров из ${cartItems.length}.`,
         `Товары, которые не удалось сохранить отмечены красным цветом`,
@@ -118,15 +106,11 @@ export default function App(props: Props) {
         ...notes,
       ])
       setProgressState(null)
-      // window.location.reload()
-      // @ts-ignore
-      // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
+      window.location.reload()
     }).catch((err: unknown) => {
       setProgressState(null)
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
-      // if (!onNewVersion)
-      //   window.location.reload()
     })
   }, [applyPromocode])
 
@@ -140,9 +124,6 @@ export default function App(props: Props) {
             onPaste={onPaste}
           />
           <Notes>
-            <div>
-              {onNewVersion ? "Версия сайта новая" : "Версия сайта старая"}
-            </div>
             {promocode && <div>Используется промокод {promocode}</div>}
             {notes.map(x => <div key={x}>{x}</div>)}
           </Notes>
@@ -156,15 +137,6 @@ export default function App(props: Props) {
     </React.StrictMode>
   )
 }
-
-// function useOnCartItemsHandler(cb: () => void) {
-//   useEffect(() => {
-//     setTimeout(() => {
-//       @ts-ignore
-// rrToUtkAdapter.onCartItems(cb)
-// }, 1000)
-// }, [])
-// }
 
 function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => void, deps: unknown[]) {
   useEffect(() => {
@@ -210,7 +182,6 @@ function setLinksTarget(startNode: Node) {
     }
   }
 }
-
 
 const Root = styled.div`
   position: fixed;

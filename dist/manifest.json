@@ -12,7 +12,8 @@
         "https://utkonos.ru/*",
         "https://www.utkonos.ru/*",
         "https://adm.utkonos.ru/*",
-        "https://www.adm.utkonos.ru/*"
+        "https://www.adm.utkonos.ru/*",
+        "https://lenta.com/*"
       ],
       "js": [
         "js/vendor.js",
@@ -31,7 +32,8 @@
     "https://utkonos.ru/*",
     "https://wwww.utkonos.ru/*",
     "https://adm.utkonos.ru/*",
-    "https://wwww.adm.utkonos.ru/*"
+    "https://wwww.adm.utkonos.ru/*",
+    "https://lenta.com/*"
   ],
   "web_accessible_resources": [
     {
