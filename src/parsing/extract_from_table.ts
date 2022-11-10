@@ -52,9 +52,14 @@ export function extractFromTable(element: HTMLElement): { cartItems: CartItem[],
       continue
     }
 
+    const textRe = new RegExp(/[а-яА-Я]{5,}/)
+
+    const title = row.find(item => item.replace(/\s+/, '').search(textRe) !== -1)
+
     cartItems.push({
       id: id,
       quantity: quantity,
+      name: title || link,
       tableRow: rowElements[i],
       warning: warning,
     })
@@ -72,12 +77,10 @@ function parseTable(element: HTMLElement): [string[][], Element[]] {
     const rowData: string[] = []
     for (const cell of rowElement.childNodes) {
       const link = document.evaluate('.//a', cell, null, XPathResult.ANY_TYPE).iterateNext()
-      if (link !== null) {
-        const url = link instanceof HTMLElement ? link.getAttribute('href') : link.textContent
-        rowData.push(url || '')
-      } else {
-        rowData.push(cell.textContent || '')
+      if (link !== null && link instanceof HTMLElement) {
+        rowData.push(link.getAttribute('href') || '')
       }
+      rowData.push(cell.textContent || '')
     }
     tableData.push(rowData)
   }

@@ -28,7 +28,6 @@ export default function App(props: Props) {
 
   const promocode = props.promocode
 
-  // useOnCartItemsHandler(() => setProgressState(null))
   useKeyboardHandler(ev => ev.key == 'Escape', () => setVisible(!visible), [visible])
 
   const onPaste = useCallback(() => {
@@ -47,14 +46,11 @@ export default function App(props: Props) {
       if (!withCounts) {
         setNotes(["Не удалось распознать колонку таблицы с количествами – везде будут '1'", ...notes])
       }
-      for (const item of cartItems) {
-        if (item.warning && item.tableRow) {
-          item.tableRow.setAttribute('style', 'background: orange;')
-        }
-      }
-      for (const el of rejectedRows) {
-        el.setAttribute('style', 'background: grey;')
-      }
+      // TODO: отобразить rejectedRows как-нибудь
+      // for (const el of rejectedRows) {
+      //   el.setAttribute('style', 'background: grey;')
+      // }
+      setItems(cartItems)
     }, 100)
   }, [editorRef, notes])
 
@@ -71,13 +67,6 @@ export default function App(props: Props) {
   const save = useCallback(() => {
     setNotes([])
     const notes: string[] = []
-    if (editorRef.current == null) return
-
-    const { cartItems } = extractData(editorRef.current)
-    if (cartItems.length == 0) {
-      console.log('no data extracted')
-      return
-    }
 
     const saveCart = async (): Promise<number> => {
       console.log('adding items', cartItems)
@@ -107,38 +96,36 @@ export default function App(props: Props) {
         console.log('failed to apply promocode', e)
         alert("Не удалось применить промокод: " + e)
       }
-      return savedCount
     }
 
     saveCart().then((successCount) => {
       setNotes([
-        `Сохранили успешно ${successCount} товаров из ${cartItems.length}.`,
+        `Сохранили успешно ${successCount} товаров из ${items.length}.`,
         `Товары, которые не удалось сохранить отмечены красным цветом`,
         `Изменения в корзине будут видны после перезагрузки страницы`,
         ...notes,
       ])
       setProgressState(null)
       // window.location.reload()
-      // @ts-ignore
-      // rrToUtkAdapter.modifyItemAtCart(items[0]) // fake cart modification to trigger reload
     }).catch((err: unknown) => {
       setProgressState(null)
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
-      // if (!onNewVersion)
-      //   window.location.reload()
     })
-  }, [applyPromocode])
+  }, [applyPromocode, items])
 
   return (
     <React.StrictMode>
       {visible && (
         <Root className="utkonos-ext-root">
-          <TextArea
-            contentEditable={true}
-            ref={editorRef}
-            onPaste={onPaste}
-          />
+          {items.length > 0 && <Grid items={items} />}
+          {items.length == 0 && (
+            <TextArea
+              contentEditable={true}
+              ref={editorRef}
+              onPaste={onPaste}
+            />
+          )}
           <Notes>
             <div>
               {onNewVersion ? "Версия сайта новая" : "Версия сайта старая"}
@@ -146,25 +133,20 @@ export default function App(props: Props) {
             {promocode && <div>Используется промокод {promocode}</div>}
             {notes.map(x => <div key={x}>{x}</div>)}
           </Notes>
-          <Button onClick={save} disabled={!!progressState}>
-            {progressState && `Сохраняем... ${progressState}`}
-            {!progressState && "Добавить"}
+          <Button onClick={save} disabled={!!progressState || !items.length}>
+            {progressState ?? "Добавить"}
           </Button>
+          {items.length > 0 && (
+            <ClearButton onClick={() => setItems([])}>
+              ❌
+            </ClearButton>
+          )}
         </Root>
       )}
       <Badge onClick={() => setVisible(!visible)} />
     </React.StrictMode>
   )
 }
-
-// function useOnCartItemsHandler(cb: () => void) {
-//   useEffect(() => {
-//     setTimeout(() => {
-//       @ts-ignore
-// rrToUtkAdapter.onCartItems(cb)
-// }, 1000)
-// }, [])
-// }
 
 function useKeyboardHandler(filter: (ev: KeyboardEvent) => boolean, cb: () => void, deps: unknown[]) {
   useEffect(() => {
@@ -211,10 +193,9 @@ function setLinksTarget(startNode: Node) {
   }
 }
 
-
 const Root = styled.div`
   position: fixed;
-  width: 400px;
+  width: 600px;
   height: 80vh;
   top: calc(50% - 40vh);
   right: 5px;
@@ -266,3 +247,26 @@ const Badge = styled.div`
   -webkit-transform-origin-x: right;
   -webkit-transform-origin-y: top;
 `;
+
+
+const ClearButton = styled.a`
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1em;
+  height: 1em;
+  padding: 5px;
+  background: white;
+  border-radius: 4px;
+  line-height: 17px;
+  font-size: 14px;
+  
+  opacity: 0.6;
+  transition: all .2s ease-in-out;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+`
