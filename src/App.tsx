@@ -4,6 +4,9 @@ import * as Cookies from 'es-cookie';
 import { extractData } from "./parsing";
 import { utkonosLegacyAPI } from "./utkonos/api_legacy";
 import { utkonosNewAPI } from "./utkonos/api_new";
+import { CartItem } from "./types";
+import Grid from "./components/Grid";
+import { UtkonosAPIException } from "./utkonos/exceptions";
 
 declare global {
   interface Window {
@@ -20,6 +23,7 @@ export default function App(props: Props) {
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
   const [notes, setNotes] = useState<string[]>([])
+  const [items, setItems] = useState<CartItem[]>([])
 
   const onLegacyDomain = window.location.host.match(/adm\.utkonos\.ru/)
   const onNewCanaryRelease = Cookies.get('CanaryReleaseRouteV4') === 'lo'
@@ -69,23 +73,24 @@ export default function App(props: Props) {
     const notes: string[] = []
 
     const saveCart = async (): Promise<number> => {
-      console.log('adding items', cartItems)
+      console.log('adding items', items)
 
       const api = onNewVersion ? utkonosNewAPI : utkonosLegacyAPI
 
       let i = 0
       let savedCount = 0
-      for (const item of cartItems) {
+      for (const item of items) {
         i++
-        setProgressState(`${i} из ${cartItems.length}`)
+        setProgressState(`${i} из ${items.length}`)
         try {
           await api.modifyCartItem(item)
           savedCount++
         } catch (err) {
-          if (item.tableRow) {
-            console.log("item is failed to save: ", item)
-            console.log("error was: ", err)
-            item.tableRow.setAttribute('style', 'background: #ffb0b0;')
+          console.log("item is failed to save: ", item)
+          console.log("error was: ", err)
+          if (err instanceof UtkonosAPIException) {
+            item.error = err.message
+            setItems([...items])
           }
         }
       }
@@ -96,6 +101,7 @@ export default function App(props: Props) {
         console.log('failed to apply promocode', e)
         alert("Не удалось применить промокод: " + e)
       }
+      return savedCount
     }
 
     saveCart().then((successCount) => {
@@ -253,7 +259,7 @@ const ClearButton = styled.a`
   display: block;
   position: absolute;
   top: 0;
-  right: 0;
+  right: 10px;
   width: 1em;
   height: 1em;
   padding: 5px;
