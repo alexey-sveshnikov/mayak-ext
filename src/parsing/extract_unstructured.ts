@@ -29,6 +29,7 @@ export function extractFromUnstructuredText(element: HTMLElement): CartItem[] {
     items.push({
       id: parseInt(id),
       quantity: 1,
+      name: `https://utkonos.ru/item/${id}/`,
     })
   }
 

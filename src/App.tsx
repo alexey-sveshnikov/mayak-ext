@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import styled from 'styled-components';
 import { extractData } from "./parsing";
 import { lentaAPI } from "./clients/api_lenta";
+import { CartItem } from "./types";
+import Grid from "./components/Grid";
 
 declare global {
   interface Window {
@@ -14,10 +16,11 @@ type Props = {
 }
 
 export default function App(props: Props) {
-  const [visible, setVisible] = useState(true)
+  const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
   const [notes, setNotes] = useState<string[]>([])
+  const [items, setItems] = useState<CartItem[]>([])
 
   const promocode = props.promocode
 
@@ -39,14 +42,11 @@ export default function App(props: Props) {
       if (!withCounts) {
         setNotes(["Не удалось распознать колонку таблицы с количествами – везде будут '1'", ...notes])
       }
-      for (const item of cartItems) {
-        if (item.warning && item.tableRow) {
-          item.tableRow.setAttribute('style', 'background: orange;')
-        }
-      }
-      for (const el of rejectedRows) {
-        el.setAttribute('style', 'background: grey;')
-      }
+      // TODO: отобразить rejectedRows как-нибудь
+      // for (const el of rejectedRows) {
+      //   el.setAttribute('style', 'background: grey;')
+      // }
+      setItems(cartItems)
     }, 100)
   }, [editorRef, notes])
 
@@ -62,29 +62,24 @@ export default function App(props: Props) {
   const save = useCallback(() => {
     setNotes([])
     const notes: string[] = []
-    if (editorRef.current == null) return
-
-    const { cartItems } = extractData(editorRef.current)
-    if (cartItems.length == 0) {
-      console.log('no data extracted')
-      return
-    }
 
     const saveCart = async (): Promise<number> => {
-      console.log('adding items', cartItems)
+      console.log('adding items', items)
+      setProgressState("Проверяем наличие...")
 
-      const firstAttempt = await lentaAPI.saveCart(cartItems)
+      const firstAttempt = await lentaAPI.saveCart(items)
 
       for (const item of firstAttempt.rejectedItems) {
         console.log("item is failed to save: ", item)
         console.log("error was: ", item.error)
-        if (item.tableRow)
-          item.tableRow.setAttribute('style', 'background: #ffb0b0;')
+        items.find(x => x.id === item.id)!.error = item.error // note: O(x^2) here
       }
+      setItems([...items])
 
       if (firstAttempt.success) {
         return firstAttempt.validItems.length
       } else {
+        setProgressState("Сохраняем...")
         const secondAttempt = await lentaAPI.saveCart(firstAttempt.validItems)
         if (secondAttempt.success) {
           return secondAttempt.validItems.length
@@ -100,7 +95,7 @@ export default function App(props: Props) {
 
     saveCart().then((successCount) => {
       setNotes([
-        `Сохранили успешно ${successCount} товаров из ${cartItems.length}.`,
+        `Сохранили успешно ${successCount} товаров из ${items.length}.`,
         `Товары, которые не удалось сохранить отмечены красным цветом`,
         `Изменения в корзине будут видны после перезагрузки страницы`,
         ...notes,
@@ -112,25 +107,32 @@ export default function App(props: Props) {
       console.log('failed to save', err)
       alert(`Не удалось сохранить: ${err}`)
     })
-  }, [applyPromocode])
+  }, [applyPromocode, items])
 
   return (
     <React.StrictMode>
       {visible && (
         <Root className="utkonos-ext-root">
-          <TextArea
-            contentEditable={true}
-            ref={editorRef}
-            onPaste={onPaste}
-          />
+          {items.length > 0 && <Grid items={items} />}
+          {items.length == 0 && (
+            <TextArea
+              contentEditable={true}
+              ref={editorRef}
+              onPaste={onPaste}
+            />
+          )}
           <Notes>
             {promocode && <div>Используется промокод {promocode}</div>}
             {notes.map(x => <div key={x}>{x}</div>)}
           </Notes>
-          <Button onClick={save} disabled={!!progressState}>
-            {progressState && `Сохраняем... ${progressState}`}
-            {!progressState && "Добавить"}
+          <Button onClick={save} disabled={!!progressState || !items.length}>
+            {progressState ?? "Добавить"}
           </Button>
+          {items.length > 0 && (
+            <ClearButton onClick={() => setItems([])}>
+              ❌
+            </ClearButton>
+          )}
         </Root>
       )}
       <Badge onClick={() => setVisible(!visible)} />
@@ -185,7 +187,7 @@ function setLinksTarget(startNode: Node) {
 
 const Root = styled.div`
   position: fixed;
-  width: 400px;
+  width: 600px;
   height: 80vh;
   top: calc(50% - 40vh);
   right: 5px;
@@ -237,3 +239,26 @@ const Badge = styled.div`
   -webkit-transform-origin-x: right;
   -webkit-transform-origin-y: top;
 `;
+
+
+const ClearButton = styled.a`
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1em;
+  height: 1em;
+  padding: 5px;
+  background: white;
+  border-radius: 4px;
+  line-height: 17px;
+  font-size: 14px;
+  
+  opacity: 0.6;
+  transition: all .2s ease-in-out;
+  
+  &:hover {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+`
