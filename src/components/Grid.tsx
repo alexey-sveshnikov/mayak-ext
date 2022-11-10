@@ -3,25 +3,47 @@ import styled from "styled-components";
 
 import { CartItem } from "../types";
 
-export default function ({ items }: { items: CartItem[] }) {
+type Props = {
+  items: CartItem[]
+  rejectedRows?: Element[]
+}
+
+function itemNameToSearchRequest(name: string): string {
+  return name
+    .replace(/вес до.+/, '')
+    .replace(/,.+/, '')
+}
+
+export default function ({ items, rejectedRows }: Props) {
   const getBackgroundColor = useCallback((item: CartItem) => {
     if (item.error)
       return '#ffb0b0'
     else if (item.warning)
       return 'lightgrey'
+    else if (item.mapped)
+      return 'lightblue'
     else
       return 'white'
 
   }, [])
   return <Grid>
+    {rejectedRows && (<table>
+      {rejectedRows}
+    </table>)}
+
     {items.map(item => (
       <Product key={item.id} style={{ background: getBackgroundColor(item) }}>
         <ProductRow>
-          <ProductDetails>
-            <Link href={`/product/${item.id}/`} target="_blank">{item.name}</Link>
+          <ProductDetails style={{
+            flex: '1 1 100%'
+          }}>
+            <Link href={`/item/${item.id}/`} target="_blank">{item.name}</Link>
           </ProductDetails>
           <ProductDetails>
             {item.quantity}&nbsp;шт
+          </ProductDetails>
+          <ProductDetails>
+            <Link href={`/search/${encodeURI(itemNameToSearchRequest(item.name))}`} target="_blank">🔎</Link>
           </ProductDetails>
         </ProductRow>
         {item.error && (
@@ -62,6 +84,7 @@ const Link = styled.a`
 const ProductRow = styled.div`
   display: flex;
   justify-content: space-between;
+  gap: 10px;
 `
 
 const ProductDetails = styled.div`

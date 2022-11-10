@@ -11,6 +11,7 @@ import { UtkonosAPIException } from "./utkonos/exceptions";
 declare global {
   interface Window {
     promocode: string;
+    skuMapping: { new_utk_id: number, old_utk_id: number }[]
   }
 }
 
@@ -18,12 +19,26 @@ type Props = {
   promocode: string;
 }
 
+const getMapping = (() => {
+  const result = new Map<number, number>()
+  for (const item of window.skuMapping) {
+    result.set(item.new_utk_id, item.old_utk_id)
+  }
+
+  return () => {
+    return result
+  }
+})()
+
 export default function App(props: Props) {
   const [visible, setVisible] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [progressState, setProgressState] = useState<string | null>(null)
   const [notes, setNotes] = useState<string[]>([])
   const [items, setItems] = useState<CartItem[]>([])
+  const [rejectedRows, setRejectedRows] = useState<Element[]>([])
+
+  const mapping = getMapping()
 
   const onLegacyDomain = window.location.host.match(/adm\.utkonos\.ru/)
   const onNewCanaryRelease = Cookies.get('CanaryReleaseRouteV4') === 'lo'
@@ -50,10 +65,17 @@ export default function App(props: Props) {
       if (!withCounts) {
         setNotes(["Не удалось распознать колонку таблицы с количествами – везде будут '1'", ...notes])
       }
-      // TODO: отобразить rejectedRows как-нибудь
-      // for (const el of rejectedRows) {
-      //   el.setAttribute('style', 'background: grey;')
-      // }
+      if (!onNewVersion) {
+        for (const item of cartItems) {
+          if (mapping.has(item.id)) {
+            item.originalId = item.id
+            item.id = mapping.get(item.id)!
+            item.mapped = true
+            console.log(`mapped ${item.name}: ${item.originalId} to ${item.id}`)
+          }
+        }
+      }
+      setRejectedRows(rejectedRows)
       setItems(cartItems)
     }, 100)
   }, [editorRef, notes])
@@ -124,7 +146,7 @@ export default function App(props: Props) {
     <React.StrictMode>
       {visible && (
         <Root className="utkonos-ext-root">
-          {items.length > 0 && <Grid items={items} />}
+          {items.length > 0 && <Grid items={items} rejectedRows={rejectedRows} />}
           {items.length == 0 && (
             <TextArea
               contentEditable={true}
@@ -143,7 +165,10 @@ export default function App(props: Props) {
             {progressState ?? "Добавить"}
           </Button>
           {items.length > 0 && (
-            <ClearButton onClick={() => setItems([])}>
+            <ClearButton onClick={() => {
+              setItems([])
+              setRejectedRows([])
+            }}>
               ❌
             </ClearButton>
           )}

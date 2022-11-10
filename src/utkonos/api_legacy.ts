@@ -143,9 +143,6 @@ class UtkonosLegacyAPI {
       "credentials": "include"
     });
 
-    if (!response.ok)
-      throw new UtkonosAPIException(response.statusText)
-
     const data = await response.json() as APIResponse
     console.log('response: ', data)
 

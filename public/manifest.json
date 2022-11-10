@@ -36,8 +36,8 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "js/injected_script.js",
-        "js/vendor.js",
+        "js/*",
+        "*.js",
         "styles.css"
       ],
       "matches": [

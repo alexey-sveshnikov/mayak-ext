@@ -1,5 +1,5 @@
 function init({ promocode }: { promocode: string }) {
-  for (const script of ['js/vendor.js', 'js/injected_script.js']) {
+  for (const script of ['sku-mapping.js', 'js/vendor.js', 'js/injected_script.js']) {
     const injectedScript = document.createElement('script');
     injectedScript.src = chrome.runtime.getURL(script) + '?' + new URLSearchParams({ promocode: promocode });
 
