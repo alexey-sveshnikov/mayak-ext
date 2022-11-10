@@ -12,8 +12,8 @@
 # Как установить
 
 1. Скачайте расширение:
-    1. [ссылка для Ленты](https://github.com/alexey-sveshnikov/mayak-pokupki/archive/refs/heads/main.zip)
-    1. [ссылка для Утконоса](https://github.com/alexey-sveshnikov/mayak-pokupki/archive/refs/heads/utkonos.zip)
+    1. [ссылка для Ленты](https://github.com/alexey-sveshnikov/mayak-pokupki-ext/archive/refs/heads/main.zip)
+    1. [ссылка для Утконоса](https://github.com/alexey-sveshnikov/mayak-pokupki-ext/archive/refs/heads/utkonos.zip)
 2. Распакуйте содержимое в любую директорию
 2. Откройте [страницу расширений](chrome://extensions/) в chrome.
 2. Включите "режим разработчика" (справа вверху)
