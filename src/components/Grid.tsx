@@ -16,6 +16,15 @@ function itemNameToSearchRequest(name: string): string {
     .replace(/,\s.+/, '')
 }
 
+function getSearchLinks(name: string) {
+  const chunks = name.split(' ')
+  return <>
+    {chunks.map((chunk, i) =>
+      <Link href={`/search/${encodeURI(chunks.slice(0, i + 1).join(" "))}/`} target="_blank">{chunk}&nbsp;</Link>
+    )}
+  </>
+}
+
 export default function ({ items, rejectedRows }: Props) {
   const getBackgroundColor = useCallback((item: CartItem) => {
     if (item.error)
@@ -39,7 +48,7 @@ export default function ({ items, rejectedRows }: Props) {
           <ProductDetails style={{
             flex: '1 1 100%'
           }}>
-            <Link href={`/item/${item.id}/`} target="_blank">{item.name}</Link>
+            {getSearchLinks(item.name)}
           </ProductDetails>
           <ProductDetails>
             {item.quantity}&nbsp;шт
