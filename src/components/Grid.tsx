@@ -10,8 +10,10 @@ type Props = {
 
 function itemNameToSearchRequest(name: string): string {
   return name
-    .replace(/вес до.+/, '')
-    .replace(/,.+/, '')
+    .replace(/\(.+?\)/, '')
+    .replace(/до\s\d.+/, '')
+    .replace(/(фас|вес|без|змж)\.?/, '')
+    .replace(/,\s.+/, '')
 }
 
 export default function ({ items, rejectedRows }: Props) {
